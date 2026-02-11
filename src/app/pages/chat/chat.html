@@ -1,0 +1,40 @@
+<!-- src/app/pages/chat/chat.component.html -->
+<div class="chat-container">
+    <!-- Header -->
+    <div class="chat-header">
+        <div class="header-left">
+            <h1>Secure Chat</h1>
+            <span class="status" [class.connected]="connected">
+                {{ connected ? '● Connected' : '○ Disconnected' }}
+            </span>
+        </div>
+        <div class="header-right">
+            <span class="username">{{ currentUser?.username }}</span>
+            <button class="logout-btn" (click)="logout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-container">
+        <div class="empty-state" *ngIf="messages.length === 0">
+            <p>No messages yet. Start the conversation!</p>
+        </div>
+
+        <div *ngFor="let message of messages" class="message" [class.own-message]="message.isOwn">
+            <div class="message-header">
+                <span class="message-username">{{ message.username }}</span>
+                <span class="message-time">{{ formatTime(message.created_at) }}</span>
+            </div>
+            <div class="message-content">{{ message.content }}</div>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input">
+        <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..."
+            [disabled]="!connected" />
+        <button (click)="sendMessage()" [disabled]="!connected || !newMessage.trim()">
+            Send
+        </button>
+    </div>
+</div>

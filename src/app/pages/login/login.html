@@ -1,0 +1,30 @@
+<!-- src/app/pages/login/login.component.html -->
+<div class="login-container">
+    <div class="login-card">
+        <h1>Secure Chat</h1>
+        <p class="subtitle">Sign in to continue</p>
+
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="admin@securechat.local"
+                    [disabled]="loading" required />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" [(ngModel)]="password" placeholder="Enter password"
+                    [disabled]="loading" required />
+            </div>
+
+            <div class="error-message" *ngIf="errorMessage">
+                {{ errorMessage }}
+            </div>
+
+            <button type="submit" [disabled]="loading">
+                <span *ngIf="!loading">Login</span>
+                <span *ngIf="loading">Logging in...</span>
+            </button>
+        </form>
+    </div>
+</div>
