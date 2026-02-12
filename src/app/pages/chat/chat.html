@@ -9,32 +9,61 @@
             </span>
         </div>
         <div class="header-right">
+            <!-- Salt Input -->
+            <mat-form-field appearance="outline" class="salt-field">
+                <mat-label>Encryption Salt</mat-label>
+                <input matInput [(ngModel)]="userSalt" [type]="saltVisible() ? 'text' : 'password'"
+                    placeholder="Enter shared secret" />
+                <button mat-icon-button matSuffix (click)="toggleSaltVisibility()" type="button">
+                    <mat-icon>{{ saltVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+            </mat-form-field>
+
             <span class="username">{{ currentUser?.username }}</span>
-            <button class="logout-btn" (click)="logout()">Logout</button>
+            <button mat-flat-button (click)="logout()">Logout</button>
         </div>
     </div>
 
     <!-- Messages -->
     <div class="messages-container">
-        <div class="empty-state" *ngIf="messages.length === 0">
+        @if (messages.length === 0) {
+        <div class="empty-state">
             <p>No messages yet. Start the conversation!</p>
+            @if (!userSalt()) {
+            <p class="salt-warning">
+                ⚠️ Configure your salt above to decrypt messages
+            </p>
+            }
         </div>
+        }
 
-        <div *ngFor="let message of messages" class="message" [class.own-message]="message.isOwn">
+        @for (message of messages; track message.id) {
+        <div class="message" [class.own-message]="message.isOwn"
+            [class.likely-gibberish]="isLikelyGibberish(message.content)">
             <div class="message-header">
                 <span class="message-username">{{ message.username }}</span>
                 <span class="message-time">{{ formatTime(message.created_at) }}</span>
             </div>
-            <div class="message-content">{{ message.content }}</div>
-        </div>
-    </div>
 
-    <!-- Input -->
+            @if (!isLikelyGibberish(message.content)) {
+            <div class="message-content">{{ message.content }}</div>
+            } @else {
+            <app-encrypted-message [length]="30" [sweepSpeed]="40" [pauseDuration]="250">
+            </app-encrypted-message>
+            }
+        </div>
+        }
+
+        <!-- Input -->
+    </div>
     <div class="chat-input">
-        <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..."
-            [disabled]="!connected" />
-        <button (click)="sendMessage()" [disabled]="!connected || !newMessage.trim()">
+        <mat-form-field appearance="outline">
+            <input matInput [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Type a message..."
+                [disabled]="!connected || !userSalt()" />
+        </mat-form-field>
+        <button matButton="filled" (click)="sendMessage()" [disabled]="!connected || !newMessage.trim() || !userSalt()">
             Send
+            <mat-icon>send</mat-icon>
         </button>
     </div>
 </div>

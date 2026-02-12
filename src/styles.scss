@@ -5,16 +5,17 @@
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
+@use "./theme-colors" as vb;
 
 html {
   height: 100%;
   @include mat.theme((
     color: (
-      primary: mat.$rose-palette,
-      tertiary: mat.$red-palette,
+      primary: vb.$primary-palette,
+      tertiary: vb.$tertiary-palette,
     ),
     typography: Roboto,
-    density: 0,
+    density: -4,
   ));
 }
 

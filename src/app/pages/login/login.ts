@@ -1,5 +1,5 @@
 // src/app/pages/login/login.component.ts
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,15 +13,20 @@ import { AuthService } from '../../services/auth';
   styleUrls: ['./login.css']
 })
 export class LoginComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   email = '';
   password = '';
   loading = false;
   errorMessage = '';
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) { }
+  ngOnInit() {
+    // If already authenticated, redirect to chat
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/chat']);
+    }
+  }
 
   onSubmit(): void {
     if (!this.email || !this.password) {

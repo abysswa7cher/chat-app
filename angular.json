@@ -38,8 +38,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2mb",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -66,6 +66,12 @@
             "development": {
               "buildTarget": "chat-app:build:development"
             }
+          },
+          "options": {
+            "allowedHosts": [
+              "inflexionless-shirly-cetological.ngrok-free.dev"
+            ],
+            "proxyConfig": "src/proxy.conf.json"
           },
           "defaultConfiguration": "development"
         },
