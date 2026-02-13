@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://crypto-kyo.onrender.com:10000",
+    "target": "https://crypto-kyo.onrender.com",
     "secure": true,
     "changeOrigin": true,
     "ws": true,
