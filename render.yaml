@@ -1,0 +1,11 @@
+# render.yaml
+services:
+  - type: web
+    name: chatapp-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist/chat-app/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
