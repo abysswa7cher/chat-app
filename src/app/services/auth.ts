@@ -2,10 +2,10 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { firstValueFrom, Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { firstValueFrom, Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { StorageService } from './storage';
-import { environment } from '../../environment';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
   access_token: string;

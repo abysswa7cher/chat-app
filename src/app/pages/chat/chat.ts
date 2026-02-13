@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../services/auth';
 import { CryptoService } from '../../services/crypto';
-import { environment } from '../../../environment';
+import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { EncryptedMessageComponent } from '../../components/encrypted-message';
 
