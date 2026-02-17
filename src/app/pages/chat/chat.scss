@@ -158,3 +158,13 @@
     font-size: 14px;
     margin-top: 10px;
 }
+
+.salt-field {
+    mat-icon {
+        cursor: pointer;
+        &:hover {
+            color: #FFFFFE;
+            transition: color 0.25s ease-out;
+        }
+    }
+}

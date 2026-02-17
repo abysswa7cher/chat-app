@@ -1,5 +1,5 @@
 // src/app/pages/chat/chat.component.ts
-import { Component, OnInit, OnDestroy, signal, effect, viewChild, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, effect, viewChild, ViewChild, ElementRef, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,11 @@ import { CryptoService } from '../../services/crypto';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { EncryptedMessageComponent } from '../../components/encrypted-message';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { catchError, debounceTime, distinctUntilChanged, EMPTY, map, Observable, of, switchMap, tap } from 'rxjs';
+import { Dialog } from '@angular/cdk/dialog';
+import { Invite } from './invite/invite';
+import { MatMenuModule } from '@angular/material/menu';
 
 interface Message {
   id: string;
@@ -19,6 +24,10 @@ interface Message {
   content: string;
   created_at: string;
   isOwn?: boolean;
+}
+
+export interface InviteDialogData {
+  inviteToken: string;
 }
 
 @Component({
@@ -34,14 +43,19 @@ interface Message {
     MatIconModule,
     MatSnackBarModule,
     EncryptedMessageComponent,
+    MatMenuModule
   ],
   templateUrl: './chat.html',
   styleUrls: ['./chat.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  private destroyRef = inject(DestroyRef);
+  dialog = inject(Dialog);
+
   messages: Message[] = [];
   newMessage = '';
   currentUser: any;
+  me = signal<any>(null);
   ws: WebSocket | null = null;
   connected = false;
 
@@ -53,9 +67,13 @@ export class ChatComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private cryptoService: CryptoService,
     private snackBar: MatSnackBar,
-    private http: HttpClient
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef
   ) {
     this.currentUser = this.authService.getCurrentUser();
+    console.log(this.currentUser);
+
+    this.authService.verifyToken().subscribe(result => this.me.set(result));
 
     // Load saved salt on init
     const savedSalt = this.cryptoService.getSalt();
@@ -63,18 +81,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.userSalt.set(savedSalt);
     }
 
-    // Auto-save salt when it changes
-    effect(() => {
-      const salt = this.userSalt();
-      if (salt) {
-        this.cryptoService.setSalt(salt);
-        this.messages = [];
-        this.loadMessageHistory();
-      }
-    });
+    this.setupMessageStream();
   }
 
-  ngOnInit(): void {  // Remove 'async'
+  ngOnInit(): void {
     if (!this.cryptoService.hasSalt()) {
       this.snackBar.open(
         '⚠️ Please configure your salt to decrypt messages',
@@ -83,37 +93,70 @@ export class ChatComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Load message history
-    this.loadMessageHistory();
-
     this.connectWebSocket();
   }
 
-  private loadMessageHistory(): void {  // Remove 'async'
-    this.http.get<Message[]>(
-      `${environment.apiUrl}/messages`
-    ).subscribe({
-      next: (messages) => {
-        const salt = this.userSalt();
+  private setupMessageStream(): void {
+    toObservable(this.userSalt)
+      .pipe(
+        // Wait 300ms after user stops typing
+        debounceTime(300),
 
-        for (const message of messages) {
-          // Decrypt each message (no await needed)
+        // Don't trigger if the salt is effectively the same
+        distinctUntilChanged(),
+
+        // Side Effect: Persist the salt whenever it settles
+        tap(salt => {
+          if (salt) this.cryptoService.setSalt(salt);
+        }),
+
+        // SwitchMap cancels previous pending HTTP requests if a new salt arrives
+        switchMap(salt => {
+          return this.fetchAndDecryptMessages(salt);
+        }),
+
+        // Auto-unsubscribe when component is destroyed
+        takeUntilDestroyed()
+      )
+      .subscribe({
+        next: (processedMessages) => {
+          this.messages = processedMessages;
+          this.cdr.markForCheck();
+          setTimeout(() => this.scrollToBottom(), 100);
+        },
+        error: (err) => console.error('Critical stream error:', err)
+      });
+  }
+
+  private fetchAndDecryptMessages(salt: string): Observable<Message[]> {
+    return this.http.get<Message[]>(`${environment.apiUrl}/messages`).pipe(
+      map(messages => {
+        return messages.map(message => {
+          // Decryption Logic
+          let decryptedContent = '[No salt configured]';
+
           if (salt && message.content) {
-            message.content = this.cryptoService.decrypt(message.content, salt);
-          } else {
-            message.content = '[No salt configured]';
+            try {
+              decryptedContent = this.cryptoService.decrypt(message.content, salt);
+            } catch (e) {
+              decryptedContent = '[Decryption Failed]';
+            }
           }
 
-          message.isOwn = message.username === this.currentUser?.username;
-          this.messages.push(message);
-        }
-
-        setTimeout(() => this.scrollToBottom(), 100);
-      },
-      error: (error) => {
-        console.error('Failed to load message history:', error);
-      }
-    });
+          return {
+            ...message,
+            content: decryptedContent,
+            isOwn: message.username === this.currentUser?.username
+          };
+        });
+      }),
+      // Catch HTTP errors here so the main stream stays alive
+      catchError(error => {
+        console.error('Failed to fetch messages:', error);
+        this.snackBar.open('Error loading history', 'Close', { duration: 3000 });
+        return of([]); // Return empty array on error to clear/keep state safe
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -138,10 +181,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.connected = true;
     };
 
-    this.ws.onmessage = (event) => {  // Remove 'async'
+    this.ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
 
-      // Decrypt the message content (no await needed)
+      // Decrypt the message content
       const salt = this.userSalt();
       if (salt && message.content) {
         message.content = this.cryptoService.decrypt(message.content, salt);
@@ -221,5 +264,29 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     // Crypto-js AES always starts with "U2FsdGVk" when encrypted
     return content.startsWith('U2FsdGVk');
+  }
+
+  getInviteToken() {
+    this.http.get("")
+  }
+
+  openInviteDialog() {
+    this.authService.getInvite()
+      .pipe(
+        switchMap(result => {
+          this.dialog.open(Invite, {
+            height: "360px",
+            width: "640px",
+            data: { inviteLink: result.invite_url }
+          }).closed.subscribe();
+          return EMPTY;
+        })
+      ).subscribe();
+  }
+
+  aboutMe() {
+    let me;
+    this.authService.verifyToken().subscribe(result => me = result);
+    this.me.set(me);
   }
 }

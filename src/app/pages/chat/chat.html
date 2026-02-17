@@ -9,16 +9,27 @@
             </span>
         </div>
         <div class="header-right">
+            @if(currentUser.is_admin) {
+            <button matButton="filled" (click)="openInviteDialog()">Invite</button>
+            }
+
+            <button matButton [matMenuTriggerFor]="menu">About me</button>
+            <mat-menu #menu="matMenu">
+                <div mat-menu-item id="about-me">
+                    <div>Username: {{me()?.username}}</div>
+                    <div>Email: {{me()?.email}}</div>
+                    <div>Admin: {{me()?.is_admin ? "Yes" : "No"}}</div>
+                </div>
+            </mat-menu>
+
             <!-- Salt Input -->
             <mat-form-field appearance="outline" class="salt-field">
                 <mat-label>Encryption Salt</mat-label>
                 <input matInput [(ngModel)]="userSalt" [type]="saltVisible() ? 'text' : 'password'"
                     placeholder="Enter shared secret" />
-                <button mat-icon-button matSuffix (click)="toggleSaltVisibility()" type="button">
-                    <mat-icon>{{ saltVisible() ? 'visibility_off' : 'visibility' }}</mat-icon>
-                </button>
+                <mat-icon matSuffix (click)="toggleSaltVisibility()">{{ saltVisible() ? 'visibility_off' : 'visibility'
+                    }}</mat-icon>
             </mat-form-field>
-
             <span class="username">{{ currentUser?.username }}</span>
             <button mat-flat-button (click)="logout()">Logout</button>
         </div>
@@ -37,7 +48,7 @@
         </div>
         }
 
-        @for (message of messages; track message.id) {
+        @for (message of messages; track message.id + $index) {
         <div class="message" [class.own-message]="message.isOwn"
             [class.likely-gibberish]="isLikelyGibberish(message.content)">
             <div class="message-header">

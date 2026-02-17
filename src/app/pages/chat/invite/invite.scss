@@ -1,0 +1,18 @@
+.dialog-wrapper {
+    padding: 1rem;
+    background: #fffffe;
+
+    .link-input {
+        display: flex;
+        align-items: baseline;
+
+        .mat-mdc-form-field {
+            width: 100%;
+        }
+
+        button {
+            margin-left: 1rem;
+        }
+    }
+
+}

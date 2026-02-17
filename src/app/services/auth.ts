@@ -26,6 +26,12 @@ interface User {
   is_admin: boolean;
 }
 
+interface InviteResponse {
+  token: string,
+  invite_url: string,
+  expires_At: string
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -67,8 +73,12 @@ export class AuthService {
   }
 
   // Verify token by calling /api/auth/me
-  private verifyToken(): Observable<User> {
+  public verifyToken(): Observable<User> {
     return this.http.get<User>(`${this.apiUrl}/auth/me`);
+  }
+
+  public getInvite(): Observable<InviteResponse> {
+    return this.http.post<InviteResponse>(`${this.apiUrl}/invite`, {});
   }
 
   // Try to refresh the access token
@@ -98,9 +108,9 @@ export class AuthService {
     }
   }
 
-  login(email: string, password: string): Observable<LoginResponse> {
+  login(username: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, {
-      email,
+      username,
       password
     }).pipe(
       tap(response => {
@@ -110,6 +120,17 @@ export class AuthService {
         this.userSignal.set(response.user);
       })
     );
+  }
+
+  register(username: string, password: string, token: string): Observable<LoginResponse> {
+    console.log("register");
+
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/register`, {
+      username: username,
+      password: password,
+      email: `${username}@genso.kyo`,
+      invitation_token: token
+    })
   }
 
   logout(): void {
@@ -141,4 +162,6 @@ export class AuthService {
   isLoggedIn(): boolean {
     return this.isAuthenticated();
   }
+
+
 }

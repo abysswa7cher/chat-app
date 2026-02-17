@@ -2,29 +2,21 @@
 <div class="login-container">
     <div class="login-card">
         <h1>Secure Chat</h1>
-        <p class="subtitle">Sign in to continue</p>
 
-        <form (ngSubmit)="onSubmit()">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" [(ngModel)]="email" placeholder="admin@securechat.local"
-                    [disabled]="loading" required />
-            </div>
+        <form [formGroup]="loginForm">
+            <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput formControlName="username" type="text"/>
+            </mat-form-field>
 
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" [(ngModel)]="password" placeholder="Enter password"
-                    [disabled]="loading" required />
-            </div>
+            <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput formControlName="password" type="password"/>
+            </mat-form-field>
 
-            <div class="error-message" *ngIf="errorMessage">
-                {{ errorMessage }}
-            </div>
-
-            <button type="submit" [disabled]="loading">
-                <span *ngIf="!loading">Login</span>
-                <span *ngIf="loading">Logging in...</span>
-            </button>
         </form>
+        <button matButton="filled" [disabled]="loading" (click)="onSubmit()" id="loginBtn">
+            {{ loading ? "Logging in..." : "Login" }}
+        </button>
     </div>
 </div>

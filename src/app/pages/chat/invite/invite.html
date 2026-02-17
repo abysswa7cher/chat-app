@@ -1,0 +1,10 @@
+<div class="dialog-wrapper">
+    <mat-label>Invite link:</mat-label>
+    <div class="link-input">
+        <mat-form-field appearance="outline">
+            <input matInput [value]="link" disabled readonly>
+        </mat-form-field>
+        <button matButton="filled" (click)="copyToClipboard()">Copy</button>
+    </div>
+    <button matButton="filled" (click)="closeDialog()">Close</button>
+</div>
