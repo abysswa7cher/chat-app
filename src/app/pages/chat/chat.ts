@@ -55,7 +55,6 @@ export class ChatComponent implements OnInit, OnDestroy {
   messages: Message[] = [];
   newMessage = '';
   currentUser: any;
-  me = signal<any>(null);
   ws: WebSocket | null = null;
   connected = false;
 
@@ -71,9 +70,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {
     this.currentUser = this.authService.getCurrentUser();
-    console.log(this.currentUser);
-
-    this.authService.verifyToken().subscribe(result => this.me.set(result));
 
     // Load saved salt on init
     const savedSalt = this.cryptoService.getSalt();
@@ -282,11 +278,5 @@ export class ChatComponent implements OnInit, OnDestroy {
           return EMPTY;
         })
       ).subscribe();
-  }
-
-  aboutMe() {
-    let me;
-    this.authService.verifyToken().subscribe(result => me = result);
-    this.me.set(me);
   }
 }

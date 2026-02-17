@@ -16,9 +16,9 @@
             <button matButton [matMenuTriggerFor]="menu">About me</button>
             <mat-menu #menu="matMenu">
                 <div mat-menu-item id="about-me">
-                    <div>Username: {{me()?.username}}</div>
-                    <div>Email: {{me()?.email}}</div>
-                    <div>Admin: {{me()?.is_admin ? "Yes" : "No"}}</div>
+                    <div>Username: {{currentUser?.username}}</div>
+                    <div>Email: {{currentUser?.email}}</div>
+                    <div>Admin: {{currentUser?.is_admin ? "Yes" : "No"}}</div>
                 </div>
             </mat-menu>
 
