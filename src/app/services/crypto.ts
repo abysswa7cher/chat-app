@@ -28,7 +28,6 @@ export class CryptoService {
 
   /**
    * Decrypt a message with the user's salt
-   * Returns the raw output even if it's gibberish (wrong salt)
    */
   decrypt(ciphertext: string, salt: string): string {
     if (!salt) {
